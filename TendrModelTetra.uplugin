@@ -1,0 +1,20 @@
+{
+    "PluginFileVersion" : 1,
+	
+	"FriendlyName" : "TendrModelTetra Plugin",
+	"Version" : 1,
+	"VersionName" : "1.0",
+	"CreatedBy" : "TendrDynamics B.V.",
+	"CreatedByURL" : "http://tendrdynamics.com",
+	"MinEngineVersion" : 1579795,
+	"Description" : "Model generation plugin (tetrahedral) for Tendr Dynamics.",
+	"CategoryPath" : "Programming Rendering.Plugins",
+	
+    "Modules" :
+	[
+		{
+			"Name" : "TendrModelTetra",
+			"Type" : "Runtime"
+		}
+	]
+}
