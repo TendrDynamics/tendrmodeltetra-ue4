@@ -4,7 +4,7 @@
 	"FriendlyName" : "TendrModelTetra Plugin",
 	"Version" : 1,
 	"VersionName" : "1.0",
-	"CreatedBy" : "TendrDynamics B.V.",
+	"CreatedBy" : "Tendr Dynamics B.V.",
 	"CreatedByURL" : "http://tendrdynamics.com",
 	"EngineVersion" : "4.6",
 	"Description" : "Model generation plugin (tetrahedral) for Tendr, a soft-body physics plugin.",
