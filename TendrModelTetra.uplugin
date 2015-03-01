@@ -1,5 +1,5 @@
 {
-    "PluginFileVersion" : 1,
+    "FileVersion" : 3,
 	
 	"FriendlyName" : "TendrModelTetra Plugin",
 	"Version" : 1,
@@ -8,7 +8,7 @@
 	"CreatedByURL" : "http://tendrdynamics.com",
 	"EngineVersion" : "4.6",
 	"Description" : "Model generation plugin (tetrahedral) for Tendr, a soft-body physics plugin.",
-	"CategoryPath" : "Tendr Dynamics.Plugins",
+	"Category" : "Tendr Dynamics.Plugins",
 	
     "Modules" :
 	[
