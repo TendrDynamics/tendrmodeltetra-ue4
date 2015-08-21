@@ -59,7 +59,7 @@ public:
 
 	// Maximum volume constraint for tetrahedra in the generated model
 	UPROPERTY( EditAnywhere, NoClear, BlueprintReadWrite, Category = "Tendr Model", meta = ( UIMin = 0, ClampMin = 0 ) )
-	int32 MaximumTetraVolume;
+	float MaximumTetraVolume;
 
 private:
 	/** Sets the last error **/
