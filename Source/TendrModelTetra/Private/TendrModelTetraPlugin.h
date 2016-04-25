@@ -19,7 +19,7 @@
 //
 // Global Tendr model generator version
 //
-const FTendrModelGeneratorVersion PluginModelGeneratorVersion = 0x00000001;
+const FTendrModelGeneratorVersion PluginModelGeneratorVersion = 0x00000002;
 
 //
 // Global logging declarations

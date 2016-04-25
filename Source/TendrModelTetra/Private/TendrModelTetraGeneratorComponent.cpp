@@ -356,6 +356,26 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 								}
 							}
 
+							// Iterate over generated tetrahedra of model
+							{
+								unsigned int index = 0;
+								for(int i = 0; i < out.numberoftetrahedra; ++i)
+								{
+									// We assume first-order tetrahedra with 4 vertices
+									OutputModelData.TetrahedronIndices.Add( out.tetrahedronlist[ index + 0 ] );
+									OutputModelData.TetrahedronIndices.Add( out.tetrahedronlist[ index + 1 ] );
+									OutputModelData.TetrahedronIndices.Add( out.tetrahedronlist[ index + 2 ] );
+									OutputModelData.TetrahedronIndices.Add( out.tetrahedronlist[ index + 3 ] );
+									index += 4;
+
+									if(b.order == 2)
+									{
+										// Apperarently somebody enabled second-order tetrahedron generation in tetgen, but we currently do not support this.
+										throw 9000;
+									}
+								}
+							}
+
 							// Iterate over generated triangles of model
 							for(int i = 0; i < out.numberoftrifaces; ++i)
 							{
@@ -429,6 +449,9 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 							break;
 						case 9:
 							SetError( TEXT( "Model generator output did not output any edges" ) );
+							break;
+						case 9000:
+							SetError( TEXT( "Second-order tetrahedrons are not supported" ) );
 							break;
 						default:
 							SetError( FString::Printf( TEXT( "Input could not be processed (tetgen error %u)" ), error ) );

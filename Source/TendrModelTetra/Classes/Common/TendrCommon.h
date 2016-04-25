@@ -51,6 +51,7 @@ typedef TArray<uint32> FTendrIndexArray;
 typedef TArray<uint32> FTendrCoarseSparseMapping;
 typedef TArray<FVector4> FTendrVertexArray;
 typedef TArray<class FTendrVertexConnectivityData> FTendrConnectivityArray;
+typedef TArray<uint32> FTendrTetrahedronIndexArray;
 
 typedef uint32 FTendrModelGeneratorVersion;
 
@@ -76,6 +77,9 @@ public:
 
 	/** Indices for UE4 use (coarse) corresponding to the entire (internal) model **/
 	FTendrIndexArray Indices;
+
+	/** Tetrahedron indices for UE4 use (coarse) corresponding to the entire (internal) model **/
+	FTendrTetrahedronIndexArray TetrahedronIndices;
 
 	/** Vertex connectivity data **/
 	FTendrConnectivityArray Connectivity;
