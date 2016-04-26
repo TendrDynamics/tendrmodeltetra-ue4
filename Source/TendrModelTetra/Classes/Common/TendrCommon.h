@@ -5,8 +5,8 @@
 // A Tendr model generator plugin for use with Unreal Engine in combination  //
 // with the Tendr Dynamics soft-body physics plugin.                         //
 //                                                                           //
-// Version 1.0                                                               //
-// January, 2015                                                             //
+// Version 1.1                                                               //
+// April, 2016                                                               //
 //                                                                           //
 // Copyright (C) 2014-2015, Tendr Dynamics B.V.                              //
 //                                                                           //
