@@ -214,7 +214,7 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 						b.diagnose = 0;
 						b.facesout = 1;
 						b.edgesout = 1;
-						b.neighout = 1;
+						b.neighout = 2;
 						b.object = tetgenbehavior::POLY;
 						b.refine = 0;
 						b.plc = 1;
@@ -366,6 +366,13 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 									OutputModelData.TetrahedronIndices.Add( out.tetrahedronlist[ index + 1 ] );
 									OutputModelData.TetrahedronIndices.Add( out.tetrahedronlist[ index + 2 ] );
 									OutputModelData.TetrahedronIndices.Add( out.tetrahedronlist[ index + 3 ] );
+
+									// Store tetrahedron to face mapping
+									OutputModelData.TetrahedronFaceIndices.Add( out.tet2facelist[ index + 0 ] );
+									OutputModelData.TetrahedronFaceIndices.Add( out.tet2facelist[ index + 1 ] );
+									OutputModelData.TetrahedronFaceIndices.Add( out.tet2facelist[ index + 2 ] );
+									OutputModelData.TetrahedronFaceIndices.Add( out.tet2facelist[ index + 3 ] );
+
 									index += 4;
 
 									if(b.order == 2)
