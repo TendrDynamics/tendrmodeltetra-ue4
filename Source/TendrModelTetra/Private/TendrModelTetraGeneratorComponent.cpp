@@ -294,7 +294,7 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 							// Sparse: non-duplicated vertices, for use in physics engine
 							//
 							// This distinction is necessary because UE4 graphics rendering requires the use of duplicated vertices
-							// for vertex data blending, while our physics engine needs to be as sparse as possible for performnace reasons.
+							// for vertex data blending, while our physics engine needs to be as sparse as possible for performance reasons.
 							//
 							TMap<FVector, uint32> TempMapCoarseToSparse;
 
@@ -377,7 +377,7 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 
 									if(b.order == 2)
 									{
-										// Apperarently somebody enabled second-order tetrahedron generation in tetgen, but we currently do not support this.
+										// Apparently somebody enabled second-order tetrahedron generation in tetgen, but we currently do not support this.
 										throw 9000;
 									}
 								}
