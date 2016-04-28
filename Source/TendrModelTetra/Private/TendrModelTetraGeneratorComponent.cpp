@@ -362,10 +362,6 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 								for(int i = 0; i < out.numberoftetrahedra; ++i)
 								{
 									// We assume first-order tetrahedra with 4 vertices
-									OutputModelData.TetrahedronIndices.Add( out.tetrahedronlist[ index + 0 ] );
-									OutputModelData.TetrahedronIndices.Add( out.tetrahedronlist[ index + 1 ] );
-									OutputModelData.TetrahedronIndices.Add( out.tetrahedronlist[ index + 2 ] );
-									OutputModelData.TetrahedronIndices.Add( out.tetrahedronlist[ index + 3 ] );
 
 									// Store tetrahedron to face mapping
 									OutputModelData.TetrahedronFaceIndices.Add( out.tet2facelist[ index + 0 ] );
@@ -389,9 +385,12 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 								int A = out.trifacelist[ i * 3 + 0 ];
 								int B = out.trifacelist[ i * 3 + 1 ];
 								int C = out.trifacelist[ i * 3 + 2 ];
+
+								// Add indices to output data
 								OutputModelData.Indices.Add( A );
 								OutputModelData.Indices.Add( B );
 								OutputModelData.Indices.Add( C );
+
 #ifdef TETRA_DEBUG
 								UE_LOG( TendrModelTetraLog, Log, TEXT( "Index %u: %u %u %u" ), i, A, B, C );
 #endif
