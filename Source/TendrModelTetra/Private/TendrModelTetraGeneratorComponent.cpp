@@ -238,6 +238,9 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 						b.supsteiner_level = 4;
 						b.addsteiner_algo = 1;
 
+						// First order tetrahedra (with 4 vertices) are necessary for all operations below that deal with tetrahedra
+						b.order = 1;
+
 						// UV support
 						b.psc = 1;
 
@@ -287,8 +290,84 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 
 						// Conversion to compatible structures
 						{
+							// Iterate over generated triangles of model
+							for(int i = 0; i < out.numberoftrifaces; ++i)
+							{
+								int A = out.trifacelist[ i * 3 + 0 ];
+								int B = out.trifacelist[ i * 3 + 1 ];
+								int C = out.trifacelist[ i * 3 + 2 ];
+
+								// Add indices to output data
+								OutputModelData.Indices.Add( A );
+								OutputModelData.Indices.Add( B );
+								OutputModelData.Indices.Add( C );
+
+	#ifdef TETRA_DEBUG
+								UE_LOG( TendrModelTetraLog, Log, TEXT( "Index %u: %u %u %u" ), i, A, B, C );
+	#endif
+							}
+
 							//
-							// Temporary coarse to sparse map
+							// Face uniqueness
+							//
+							// This map is used to identify faces that are used multiple times, by counting their references.
+							// Since we only allow unique faces for tetrahedra, we use this map to identify and duplicate any non-unique faces.
+							//
+							// This array is initialized with N elements set to 0, where N is the current amount of faces in the tetgen output.
+							//
+							TArray< uint8 > TempFaceUniqueness;
+							TempFaceUniqueness.Init( 0, out.numberoftrifaces );
+							uint32 NonUniqueFaces = 0;
+
+							// Iterate over generated tetrahedra of model
+							{
+								// Lambda function to make faces unique
+								auto FnFaceMakeUnique = [ &TempFaceUniqueness, &NonUniqueFaces, &OutputModelData ]( int FaceIndex )
+								{
+									if(TempFaceUniqueness[ FaceIndex ] > 0)
+									{
+										// Face is not unique, so duplicate by reinserting at the end
+										int A = OutputModelData.Indices[ FaceIndex * 3 + 0 ];
+										int B = OutputModelData.Indices[ FaceIndex * 3 + 1 ];
+										int C = OutputModelData.Indices[ FaceIndex * 3 + 2 ];
+
+										int NewIndex = OutputModelData.Indices.Add( A );
+										OutputModelData.Indices.Add( B );
+										OutputModelData.Indices.Add( C );
+										TempFaceUniqueness.Add( 0 );
+										++NonUniqueFaces;
+
+										// Update face index
+										FaceIndex = NewIndex / 3;
+									}
+
+									// Increment uniqueness counter
+									TempFaceUniqueness[ FaceIndex ] = TempFaceUniqueness[ FaceIndex ] + 1;
+
+									return FaceIndex;
+								};
+
+								for(int i = 0; i < out.numberoftetrahedra; ++i)
+								{
+									// We assume first-order tetrahedra with 4 vertices
+
+									// For each face, ensure the uniqueness
+									int A = FnFaceMakeUnique( out.tet2facelist[ i * 4 + 0 ] );
+									int B = FnFaceMakeUnique( out.tet2facelist[ i * 4 + 1 ] );
+									int C = FnFaceMakeUnique( out.tet2facelist[ i * 4 + 2 ] );
+									int D = FnFaceMakeUnique( out.tet2facelist[ i * 4 + 3 ] );
+
+									// Store tetrahedron to face mapping
+									OutputModelData.TetrahedronFaceIndices.Add( A );
+									OutputModelData.TetrahedronFaceIndices.Add( B );
+									OutputModelData.TetrahedronFaceIndices.Add( C );
+									OutputModelData.TetrahedronFaceIndices.Add( D );
+								}
+								UE_LOG( TendrModelTetraLog, Log, TEXT( "Face uniqueness pass: %u non unique faces have been found and duplicated" ), NonUniqueFaces );
+							}
+
+							//
+							// Coarse-to-sparse mapping
 							//
 							// Coarse: duplicated vertices, for use in UE4 graphics rendering
 							// Sparse: non-duplicated vertices, for use in physics engine
@@ -356,49 +435,16 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 								}
 							}
 
-							// Iterate over generated tetrahedra of model
-							{
-								unsigned int index = 0;
-								for(int i = 0; i < out.numberoftetrahedra; ++i)
-								{
-									// We assume first-order tetrahedra with 4 vertices
-
-									// Store tetrahedron to face mapping
-									OutputModelData.TetrahedronFaceIndices.Add( out.tet2facelist[ index + 0 ] );
-									OutputModelData.TetrahedronFaceIndices.Add( out.tet2facelist[ index + 1 ] );
-									OutputModelData.TetrahedronFaceIndices.Add( out.tet2facelist[ index + 2 ] );
-									OutputModelData.TetrahedronFaceIndices.Add( out.tet2facelist[ index + 3 ] );
-
-									index += 4;
-
-									if(b.order == 2)
-									{
-										// Apparently somebody enabled second-order tetrahedron generation in tetgen, but we currently do not support this.
-										throw 9000;
-									}
-								}
-							}
-
-							// Iterate over generated triangles of model
-							for(int i = 0; i < out.numberoftrifaces; ++i)
-							{
-								int A = out.trifacelist[ i * 3 + 0 ];
-								int B = out.trifacelist[ i * 3 + 1 ];
-								int C = out.trifacelist[ i * 3 + 2 ];
-
-								// Add indices to output data
-								OutputModelData.Indices.Add( A );
-								OutputModelData.Indices.Add( B );
-								OutputModelData.Indices.Add( C );
-
-#ifdef TETRA_DEBUG
-								UE_LOG( TendrModelTetraLog, Log, TEXT( "Index %u: %u %u %u" ), i, A, B, C );
-#endif
-							}
-
 							// Output some statistics
 							UE_LOG( TendrModelTetraLog, Log, TEXT( "Input  = Indices [%u], Vertices [%u]" ), InputIndices.Num(), NumSurfaceVerts );
-							UE_LOG( TendrModelTetraLog, Log, TEXT( "Output = Indices [%u], Vertices [%u surface, %u internal, %u physics]" ), OutputModelData.Indices.Num(), NumSurfaceVerts, OutputModelData.Vertices.Num(), OutputModelData.VerticesPhysics.Num() );
+							UE_LOG( TendrModelTetraLog, Log, TEXT( "Output = Indices [%u], Triangles [%u], Tetrahedra [%u], Vertices [%u surface, %u internal, %u physics]" ),
+									OutputModelData.Indices.Num(),
+									OutputModelData.Indices.Num() / 3,
+									OutputModelData.TetrahedronFaceIndices.Num() / 4,
+									NumSurfaceVerts,
+									OutputModelData.Vertices.Num(),
+									OutputModelData.VerticesPhysics.Num()
+									);
 
 							// Add connectivity based on edges
 							uint32 MaxNeighbours = 0;
