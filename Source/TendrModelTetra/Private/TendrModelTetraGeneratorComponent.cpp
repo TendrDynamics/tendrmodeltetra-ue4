@@ -351,6 +351,12 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 								{
 									// We assume first-order tetrahedra with 4 vertices
 
+									// Store tetrahedron vertices
+									OutputModelData.TetrahedronVertexIndices.Add( out.tetrahedronlist[ i * 4 + 0 ] );
+									OutputModelData.TetrahedronVertexIndices.Add( out.tetrahedronlist[ i * 4 + 1 ] );
+									OutputModelData.TetrahedronVertexIndices.Add( out.tetrahedronlist[ i * 4 + 2 ] );
+									OutputModelData.TetrahedronVertexIndices.Add( out.tetrahedronlist[ i * 4 + 3 ] );
+
 									// For each face, ensure the uniqueness
 									int A = FnFaceMakeUnique( out.tet2facelist[ i * 4 + 0 ] );
 									int B = FnFaceMakeUnique( out.tet2facelist[ i * 4 + 1 ] );
