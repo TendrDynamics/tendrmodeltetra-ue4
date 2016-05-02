@@ -49,7 +49,7 @@ public:
 	// End UActorComponent interface.
 
 	// Begin ITendrModelData interface.
-	virtual FTendrModelData Build( const FTendrVertexArray& InputVertices, const FTendrIndexArray& InputIndices, bool bSilent ) override;
+	virtual FTendrModelData Build( const FTendrVertexArray& InputVertices, const FTendrIndexArray& InputIndices, const FTendrTexCoordArray( &InputTexCoords )[ MAX_TEXCOORDS ], bool bSilent ) override;
 	virtual FString GetLastError() override;
 	// End ITendrModelData interface.
 

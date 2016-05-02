@@ -53,6 +53,9 @@ typedef TArray<FVector4> FTendrVertexArray;
 typedef TArray<class FTendrVertexConnectivityData> FTendrConnectivityArray;
 typedef TArray<uint32> FTendrTetrahedronFaceIndexArray;
 typedef TArray<uint32> FTendrTetrahedronVertexIndexArray;
+typedef TArray<FVector2D> FTendrTexCoordArray;
+typedef TArray<FTendrTangent> FTendrTangentArray;
+typedef TArray<bool> FTendrVertexSurfaceIndicatorArray;
 
 typedef uint32 FTendrModelGeneratorVersion;
 
@@ -78,6 +81,15 @@ public:
 
 	/** Indices for UE4 use (coarse) corresponding to the entire (internal) model **/
 	FTendrIndexArray Indices;
+	
+	/** Texcoords for UE4 use (coarse) corresponding to the entire (internal) model **/
+	FTendrTexCoordArray TexCoords[ MAX_TEXCOORDS ];
+
+	/** Tangents for UE4 use (coarse) corresponding to the entire (internal) model **/
+	FTendrTangentArray Tangents;
+
+	/** Boolean surface indicators for UE4 use (coarse) corresponding to the entire (internal) model **/
+	FTendrVertexSurfaceIndicatorArray VerticesSurfaceIndicators;
 
 	/** Tetrahedron face indices (4 face indices per tetrahedron) for UE4 use (coarse) corresponding to the entire (internal) model **/
 	FTendrTetrahedronFaceIndexArray TetrahedronFaceIndices;

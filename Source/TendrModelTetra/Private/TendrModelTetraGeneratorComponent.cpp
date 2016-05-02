@@ -120,7 +120,7 @@ FString UTendrModelTetraGeneratorComponent::GetDesc()
 		);
 }
 
-FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArray& InputVertices, const FTendrIndexArray& InputIndices, bool bSilent )
+FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArray& InputVertices, const FTendrIndexArray& InputIndices, const FTendrTexCoordArray( &InputTexCoords )[ MAX_TEXCOORDS ], bool bSilent )
 {
 	FTendrModelData OutputModelData;
 
@@ -156,23 +156,25 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 						in.pointlist[ i * 3 + 1 ] = InputVertices[ i ].Y;
 						in.pointlist[ i * 3 + 2 ] = InputVertices[ i ].Z;
 
-						// Store UVs (currently not used)
+						// Store UVs
 						tetgenio::pointparam param;
 						param.tag = 0;
 						param.type = 0;
 						for(uint32 t = 0; t < MAX_TEXCOORDS; ++t)
 						{
-							param.uv[ t * 2 + 0 ] = 1;
-							param.uv[ t * 2 + 1 ] = 1;
+							param.uv[ t * 2 + 0 ] = InputTexCoords[ t ][ i ].X;
+							param.uv[ t * 2 + 1 ] = InputTexCoords[ t ][ i ].Y;
 						}
 
+						// ACHTUNG: TODO: Store tangents
+
 						// Store other per-vertex data (currently not used)
-						param.uv[ 8 + 0 ] = 0;
-						param.uv[ 8 + 1 ] = 0;
-						param.uv[ 8 + 2 ] = 0;
-						param.uv[ 8 + 3 ] = 0;
-						param.uv[ 8 + 4 ] = 0;
-						param.uv[ 8 + 5 ] = 0;
+						param.uv[ MAX_TEXCOORDS * 2 + 0 ] = 0;
+						param.uv[ MAX_TEXCOORDS * 2 + 1 ] = 0;
+						param.uv[ MAX_TEXCOORDS * 2 + 2 ] = 0;
+						param.uv[ MAX_TEXCOORDS * 2 + 3 ] = 0;
+						param.uv[ MAX_TEXCOORDS * 2 + 4 ] = 0;
+						param.uv[ MAX_TEXCOORDS * 2 + 5 ] = 0;
 
 						in.pointparamlist[ i ] = param;
 
@@ -290,6 +292,9 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 
 						// Conversion to compatible structures
 						{
+							// Temporary indices structure
+							TArray<uint32> Indices;
+
 							// Iterate over generated triangles of model
 							for(int i = 0; i < out.numberoftrifaces; ++i)
 							{
@@ -298,13 +303,9 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 								int C = out.trifacelist[ i * 3 + 2 ];
 
 								// Add indices to output data
-								OutputModelData.Indices.Add( A );
-								OutputModelData.Indices.Add( B );
-								OutputModelData.Indices.Add( C );
-
-	#ifdef TETRA_DEBUG
-								UE_LOG( TendrModelTetraLog, Log, TEXT( "Index %u: %u %u %u" ), i, A, B, C );
-	#endif
+								Indices.Add( A );
+								Indices.Add( B );
+								Indices.Add( C );
 							}
 
 							//
@@ -322,18 +323,18 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 							// Iterate over generated tetrahedra of model
 							{
 								// Lambda function to make faces unique
-								auto FnFaceMakeUnique = [ &TempFaceUniqueness, &NonUniqueFaces, &OutputModelData ]( int FaceIndex )
+								auto FnFaceMakeUnique = [ &TempFaceUniqueness, &NonUniqueFaces, &Indices ]( int FaceIndex )
 								{
 									if(TempFaceUniqueness[ FaceIndex ] > 0)
 									{
 										// Face is not unique, so duplicate by reinserting at the end
-										int A = OutputModelData.Indices[ FaceIndex * 3 + 0 ];
-										int B = OutputModelData.Indices[ FaceIndex * 3 + 1 ];
-										int C = OutputModelData.Indices[ FaceIndex * 3 + 2 ];
+										int A = Indices[ FaceIndex * 3 + 0 ];
+										int B = Indices[ FaceIndex * 3 + 1 ];
+										int C = Indices[ FaceIndex * 3 + 2 ];
 
-										int NewIndex = OutputModelData.Indices.Add( A );
-										OutputModelData.Indices.Add( B );
-										OutputModelData.Indices.Add( C );
+										int NewIndex = Indices.Add( A );
+										Indices.Add( B );
+										Indices.Add( C );
 										TempFaceUniqueness.Add( 0 );
 										++NonUniqueFaces;
 
@@ -343,7 +344,6 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 
 									// Increment uniqueness counter
 									TempFaceUniqueness[ FaceIndex ] = TempFaceUniqueness[ FaceIndex ] + 1;
-
 									return FaceIndex;
 								};
 
@@ -373,6 +373,61 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 							}
 
 							//
+							// Construct a hash map that maps from vertex to input index
+							//
+							TMap<FVector, uint32> InputToOutputMap;
+							for(int i = 0; i < in.numberofpoints; ++i)
+							{
+								FVector Vertex( in.pointlist[ i * 3 + 0 ], in.pointlist[ i * 3 + 1 ], in.pointlist[ i * 3 + 2 ] );
+								InputToOutputMap.Add( Vertex, i );
+							}
+
+							//
+							// Tetgen regenerates the triangle faces from scratch, and excessively throws out any duplicate vertices on the way.
+							// Unfortunately, we need these duplicate vertices to be present in the faces,
+							// as they point to vertices which have an identical position but have different UV data.
+							//
+							// Therefore, we iterate over the generated face indices, and find any equivalent faces (e.g. matching positions) in the input face array.
+							// If a match is found, we know that tetgen has messed up the face indices, and we replace all indices with the original data.
+							//
+							// In the end, our original surface face indices are restored within tetgen's output, and our UV vertex data will still be useable.
+							//
+							for(int i = 0; i < Indices.Num() / 3; ++i)
+							{
+								int A = Indices[ i * 3 + 0 ];
+								int B = Indices[ i * 3 + 1 ];
+								int C = Indices[ i * 3 + 2 ];
+
+								FVector VA = FVector( out.pointlist[ A * 3 + 0 ], out.pointlist[ A * 3 + 1 ], out.pointlist[ A * 3 + 2 ] );
+								FVector VB = FVector( out.pointlist[ B * 3 + 0 ], out.pointlist[ B * 3 + 1 ], out.pointlist[ B * 3 + 2 ] );
+								FVector VC = FVector( out.pointlist[ C * 3 + 0 ], out.pointlist[ C * 3 + 1 ], out.pointlist[ C * 3 + 2 ] );
+
+								// Look for matching face (TODO: very naive method)
+								for(int i = 0; i < InputIndices.Num() / 3; ++i)
+								{
+									int IA = InputIndices[ i * 3 + 0 ];
+									int IB = InputIndices[ i * 3 + 1 ];
+									int IC = InputIndices[ i * 3 + 2 ];
+
+									FVector IVA = FVector( out.pointlist[ IA * 3 + 0 ], out.pointlist[ IA * 3 + 1 ], out.pointlist[ IA * 3 + 2 ] );
+									FVector IVB = FVector( out.pointlist[ IB * 3 + 0 ], out.pointlist[ IB * 3 + 1 ], out.pointlist[ IB * 3 + 2 ] );
+									FVector IVC = FVector( out.pointlist[ IC * 3 + 0 ], out.pointlist[ IC * 3 + 1 ], out.pointlist[ IC * 3 + 2 ] );
+
+									if(( VA == IVA || VA == IVB || VA == IVC ) && ( VB == IVA || VB == IVB || VB == IVC ) && ( VC == IVA || VC == IVB || VC == IVC ) )
+									{
+										// Found equivalent surface face, so replace this face with the proper input face
+										A = IA;
+										B = IB;
+										C = IC;
+										break;
+									}
+								}
+								OutputModelData.Indices.Add( A );
+								OutputModelData.Indices.Add( B );
+								OutputModelData.Indices.Add( C );
+							}
+
+							//
 							// Coarse-to-sparse mapping
 							//
 							// Coarse: duplicated vertices, for use in UE4 graphics rendering
@@ -386,11 +441,20 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 							// Iterate over generated points of model
 							for(int i = 0; i < out.numberofpoints; ++i)
 							{
-								// Retrieve vertex
-								FVector Vertex( out.pointlist[ i * 3 + 0 ], out.pointlist[ i * 3 + 1 ], out.pointlist[ i * 3 + 2 ] );
-
 								// Store vertex
+								FVector Vertex( out.pointlist[ i * 3 + 0 ], out.pointlist[ i * 3 + 1 ], out.pointlist[ i * 3 + 2 ] );
 								OutputModelData.Vertices.Add( FVector4( Vertex, 0 ) );
+
+								// Store UVs
+								for(uint32 t = 0; t < MAX_TEXCOORDS; ++t)
+								{
+									OutputModelData.TexCoords[ t ].Add( FVector2D( out.pointparamlist[ i ].uv[ t * 2 + 0 ], out.pointparamlist[ i ].uv[ t * 2 + 1 ] ) );
+								}
+
+								//
+								// Find any equivalent vertices in the input data and determine which output vertices are actually on the surface
+								//
+								OutputModelData.VerticesSurfaceIndicators.Add( (InputToOutputMap.Find( Vertex ) != NULL) ? true : false );
 
 								// Coarse to sparse mapping algorithm
 								{
