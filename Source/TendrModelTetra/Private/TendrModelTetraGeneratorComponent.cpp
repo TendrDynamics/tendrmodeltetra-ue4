@@ -302,7 +302,7 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 								int B = out.trifacelist[ i * 3 + 1 ];
 								int C = out.trifacelist[ i * 3 + 2 ];
 
-								// Add indices to output data
+								// Add indices (coarse) to output data
 								Indices.Add( A );
 								Indices.Add( B );
 								Indices.Add( C );
@@ -351,7 +351,7 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 								{
 									// We assume first-order tetrahedra with 4 vertices
 
-									// Store tetrahedron vertices
+									// Store tetrahedron vertices (coarse)
 									OutputModelData.TetrahedronVertexIndices.Add( out.tetrahedronlist[ i * 4 + 0 ] );
 									OutputModelData.TetrahedronVertexIndices.Add( out.tetrahedronlist[ i * 4 + 1 ] );
 									OutputModelData.TetrahedronVertexIndices.Add( out.tetrahedronlist[ i * 4 + 2 ] );
@@ -373,7 +373,7 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 							}
 
 							//
-							// Construct a hash map that maps from vertex to input index
+							// Construct a hash map that maps from vertex (coarse) to input index
 							//
 							TMap<FVector, uint32> InputToOutputMap;
 							for(int i = 0; i < in.numberofpoints; ++i)
@@ -441,7 +441,7 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 							// Iterate over generated points of model
 							for(int i = 0; i < out.numberofpoints; ++i)
 							{
-								// Store vertex
+								// Store vertex (coarse)
 								FVector Vertex( out.pointlist[ i * 3 + 0 ], out.pointlist[ i * 3 + 1 ], out.pointlist[ i * 3 + 2 ] );
 								OutputModelData.Vertices.Add( FVector4( Vertex, 0 ) );
 
@@ -452,7 +452,7 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 								}
 
 								//
-								// Find any equivalent vertices in the input data and determine which output vertices are actually on the surface
+								// Find any equivalent vertices (coarse) in the input data and determine which output vertices (coarse) are actually on the surface
 								//
 								OutputModelData.VerticesSurfaceIndicators.Add( (InputToOutputMap.Find( Vertex ) != NULL) ? true : false );
 
