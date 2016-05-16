@@ -216,14 +216,16 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 						b.edgesout = 1;
 						b.neighout = 1;
 						b.object = tetgenbehavior::POLY;
+						b.refine = 0;
 						b.plc = 1;
 						b.quality = 1;
+						b.steinerleft = 4;
 
 						//b.weighted = 1;
 
 						//b.no_sort = 1;
-						//b.optscheme = 0;
-						//b.optlevel = 0;
+						b.optlevel = 9;
+						b.optscheme = 7;
 
 						// Disable removal of duplicate vertices and faces
 						b.nomergefacet = 1;
@@ -233,18 +235,22 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 						// Prevent insertion of vertices on boundary, only interior
 						b.nobisect = 1;
 						b.nobisect_nomerge = 1;
-						//b.supsteiner_level = 0;
+						b.supsteiner_level = 4;
+						b.addsteiner_algo = 1;
 
 						// UV support
 						b.psc = 1;
 
 						// Constrain maximum volume of tetras
 						//b.metric = 1;
-						//b.minratio = 10;
+						b.minratio = 1.5;
+						b.mindihedral = 10.0;
 						if(MaximumTetraVolume > 0)
 						{
-							b.maxvolume = MaximumTetraVolume;
+							//b.varvolume = 0;
 							b.fixedvolume = 1;
+							b.maxvolume = MaximumTetraVolume;
+							
 						}
 					}
 
@@ -260,6 +266,23 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 									out.numberoftrifaces,
 									out.numberofedges
 									);
+
+							if( out.numberofpoints == 0 )
+							{
+								throw 6;
+							}
+							if( out.numberoftetrahedra == 0 )
+							{
+								throw 7;
+							}
+							if(	out.numberoftrifaces == 0 )
+							{
+								throw 8;
+							}
+							if( out.numberofedges == 0 )
+							{
+								throw 9;
+							}
 						}
 
 						// Conversion to compatible structures
@@ -394,6 +417,18 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 						case 4:
 						case 5:
 							SetError( TEXT( "Input contains triangles that are too small" ) );
+							break;
+						case 6:
+							SetError( TEXT( "Model generator output did not output any points" ) );
+							break;
+						case 7:
+							SetError( TEXT( "Model generator output did not output any tetrahedra" ) );
+							break;
+						case 8:
+							SetError( TEXT( "Model generator output did not output any triangles" ) );
+							break;
+						case 9:
+							SetError( TEXT( "Model generator output did not output any edges" ) );
 							break;
 						default:
 							SetError( FString::Printf( TEXT( "Input could not be processed (tetgen error %u)" ), error ) );

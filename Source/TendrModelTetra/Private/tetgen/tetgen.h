@@ -766,7 +766,7 @@ public:
 		incrflip = 0;
 		flipinsert = 0;
 		varvolume = 0;
-		fixedvolume = 0;
+		fixedvolume = 1;
 		noexact = 0;
 		nostaticfilter = 0;
 		insertaddpoints = 0;
