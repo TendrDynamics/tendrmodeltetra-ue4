@@ -18,9 +18,9 @@
 
 #include "TendrModelTetraPluginPrivatePCH.h"
 
-ATendrModelTetraGeneratorActor::ATendrModelTetraGeneratorActor( const class FPostConstructInitializeProperties& PCIP )
-: Super( PCIP )
+ATendrModelTetraGeneratorActor::ATendrModelTetraGeneratorActor( const class FObjectInitializer &ObjectInitializer )
+: Super( ObjectInitializer )
 {
-	TendrModelDataComponent = PCIP.CreateDefaultSubobject<UTendrModelTetraGeneratorComponent>( this, TEXT( "TendrModelTetraGeneratorComponent0" ) );
+	TendrModelDataComponent = ObjectInitializer.CreateDefaultSubobject<UTendrModelTetraGeneratorComponent>( this, TEXT( "TendrModelTetraGeneratorComponent0" ) );
 	RootComponent = TendrModelDataComponent;
 }

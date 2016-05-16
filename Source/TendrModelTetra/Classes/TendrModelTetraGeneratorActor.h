@@ -31,5 +31,5 @@ class ATendrModelTetraGeneratorActor : public AActor
 	GENERATED_UCLASS_BODY( )
 
 	UPROPERTY( Category = Physics, VisibleAnywhere, BlueprintReadOnly )
-	TSubobjectPtr<class UTendrModelTetraGeneratorComponent> TendrModelDataComponent;
+	class UTendrModelTetraGeneratorComponent *TendrModelDataComponent;
 };
