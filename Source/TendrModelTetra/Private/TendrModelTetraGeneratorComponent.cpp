@@ -75,8 +75,8 @@ void myprintf( const char* format, ... )
 }
 ///////////////////////////////////////////////////////////////////////////////
 
-UTendrModelTetraGeneratorComponent::UTendrModelTetraGeneratorComponent( const FPostConstructInitializeProperties& PCIP )
-: USceneComponent( PCIP )
+UTendrModelTetraGeneratorComponent::UTendrModelTetraGeneratorComponent( const FObjectInitializer &ObjectInitializer )
+: USceneComponent( ObjectInitializer )
 {
 	TendrModelGeneratorVersion = PluginModelGeneratorVersion;
 	MaximumTetraVolume = 7500;
