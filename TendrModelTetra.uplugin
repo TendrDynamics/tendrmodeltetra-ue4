@@ -6,17 +6,15 @@
 	"VersionName" : "1.0",
 	"CreatedBy" : "Tendr Dynamics B.V.",
 	"CreatedByURL" : "http://tendrdynamics.com",
-	"EngineVersion" : "4.8",
 	"Description" : "Model generation plugin (tetrahedral) for Tendr, a soft-body physics plugin.",
 	"Category" : "Tendr Dynamics",
 	"EnabledByDefault" : true,
 	
-    "Modules" :
+  "Modules" :
 	[
 		{
 			"Name" : "TendrModelTetra",
-			"Type" : "Runtime",
-			"WhitelistPlatforms" : [ "Win64" ]
+			"Type" : "Runtime"
 		}
 	]
 }

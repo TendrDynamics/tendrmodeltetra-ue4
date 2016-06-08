@@ -378,23 +378,23 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 							uint32 MaxNeighbours = 0;
 							for(int i = 0; i < out.numberofedges; ++i)
 							{
-								int a, b;
+								int aa, bb;
 								{
 									// Retrieve edge indices (coarse)
 									int coarseA = out.edgelist[ i * 2 + 0 ];
 									int coarseB = out.edgelist[ i * 2 + 1 ];
 
 									// Get corresponding sparse index
-									a = OutputModelData.MappingCoarseToSparse[ coarseA ];
-									b = OutputModelData.MappingCoarseToSparse[ coarseB ];
+									aa = OutputModelData.MappingCoarseToSparse[ coarseA ];
+									bb = OutputModelData.MappingCoarseToSparse[ coarseB ];
 
 									// Check for consistency
-									check( a != InvalidIndex );
-									check( b != InvalidIndex );
+									check( aa != InvalidIndex );
+									check( bb != InvalidIndex );
 
 									// Add to sparse connectivity data structure
-									ConnectivityAddNeighbour( OutputModelData, a, b, MaxNeighbours );
-									ConnectivityAddNeighbour( OutputModelData, b, a, MaxNeighbours );
+									ConnectivityAddNeighbour( OutputModelData, aa, bb, MaxNeighbours );
+									ConnectivityAddNeighbour( OutputModelData, bb, aa, MaxNeighbours );
 								}
 							}
 

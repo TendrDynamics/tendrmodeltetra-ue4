@@ -2193,10 +2193,10 @@ void tetgenmesh::initializepools( )
 	if(b->psc)
 	{
 		// '-s' option (PSC), the u,v coordinates are provided.
-		pointmtrindex = 3 + tetgenio::pointparam::maxuvs + numpointattrib;
+		pointmtrindex = 3 + tetgenio::maxuvs + numpointattrib;
 		// The index within each point at which its u, v coordinates are found.
 		// Comment: They are saved after the list of point attributes.
-		pointparamindex = pointmtrindex - tetgenio::pointparam::maxuvs;
+		pointparamindex = pointmtrindex - tetgenio::maxuvs;
 	}
 	else
 	{
@@ -3999,7 +3999,7 @@ bool tetgenmesh::lu_decmp( REAL lu[ 4 ][ 4 ], int n, int* ps, REAL* d, int N )
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-void tetgenmesh::lu_solve( REAL lu[ 4 ][ 4 ], int n, int* ps, REAL* b, int N )
+void tetgenmesh::lu_solve( REAL lu[ 4 ][ 4 ], int n, int* ps, REAL* bb, int N )
 {
 	int i, j;
 	REAL X[ 4 ], dot;
@@ -4012,7 +4012,7 @@ void tetgenmesh::lu_solve( REAL lu[ 4 ][ 4 ], int n, int* ps, REAL* b, int N )
 		dot = 0.0;
 		for(j = N; j < i + N; j++)
 			dot += lu[ ps[ i ] ][ j ] * X[ j ];
-		X[ i ] = b[ ps[ i ] ] - dot;
+		X[ i ] = bb[ ps[ i ] ] - dot;
 	}
 
 	// Back substitution, in L triangular matrix.
@@ -4024,7 +4024,7 @@ void tetgenmesh::lu_solve( REAL lu[ 4 ][ 4 ], int n, int* ps, REAL* b, int N )
 		X[ i ] = ( X[ i ] - dot ) / lu[ ps[ i ] ][ i ];
 	}
 
-	for(i = N; i < n + N; i++) b[ i ] = X[ i ];
+	for(i = N; i < n + N; i++) bb[ i ] = X[ i ];
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -4329,7 +4329,7 @@ void tetgenmesh::projpt2edge( point p, point e1, point e2, point prj, REAL* uv )
 
 	if(uv)
 	{
-		for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+		for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 		{
 			REAL puv, e1uv, e2uv, v1uv, v2uv;
 
@@ -9786,7 +9786,7 @@ void tetgenmesh::transfernodes( )
 		if(b->psc)
 		{
 			// Read the geometry parameters.
-			for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+			for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 			{
 				setpointgeomuv( pointloop, tt, in->pointparamlist[ i ].uv[ tt ] );
 			}
@@ -10749,13 +10749,13 @@ int tetgenmesh::incrementalflip( point newpt, int hullflag, flipconstraints *fc 
 		if(sign < 0)
 		{
 			point pd = newpt;
-			point pe = oppo( fliptets[ 1 ] );
+			point pe_local = oppo( fliptets[ 1 ] );
 			// Check the convexity of its three edges. Stop checking either a
 			//   locally non-convex edge (ori < 0) or a flat edge (ori = 0) is
 			//   encountered, and 'fliptet' represents that edge.
 			for(i = 0; i < 3; i++)
 			{
-				ori = orient3d( org( fliptets[ 0 ] ), dest( fliptets[ 0 ] ), pd, pe );
+				ori = orient3d( org( fliptets[ 0 ] ), dest( fliptets[ 0 ] ), pd, pe_local );
 				if(ori <= 0) break;
 				enextself( fliptets[ 0 ] );
 			}
@@ -15264,7 +15264,7 @@ int tetgenmesh::getsteinerptonsegment( face* seg, point refpt, point steinpt, RE
 				// UV
 				if(uv)
 				{
-					for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+					for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 					{
 						REAL far_eiuv, far_ejuv;
 						far_eiuv = pointgeomuv( far_ei, tt );
@@ -15286,7 +15286,7 @@ int tetgenmesh::getsteinerptonsegment( face* seg, point refpt, point steinpt, RE
 				// UV
 				if(uv)
 				{
-					for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+					for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 					{
 						REAL far_eiuv, far_ejuv;
 						far_eiuv = pointgeomuv( far_ei, tt );
@@ -15322,7 +15322,7 @@ int tetgenmesh::getsteinerptonsegment( face* seg, point refpt, point steinpt, RE
 			// UV
 			if( uv )
 			{
-				for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+				for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 				{
 					REAL iuv, juv;
 					iuv = pointgeomuv( ei, tt );
@@ -15342,7 +15342,7 @@ int tetgenmesh::getsteinerptonsegment( face* seg, point refpt, point steinpt, RE
 		// UV
 		if( uv ) 
 		{
-			for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+			for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 			{
 				REAL iuv, juv;
 				iuv = pointgeomuv( ei, tt );
@@ -15428,14 +15428,14 @@ void tetgenmesh::delaunizesegments( )
 			{
 				// The segment is missing. Split it.
 				// Create a new point.
-				REAL uv[ tetgenio::pointparam::maxuvs ];
+				REAL uv[ tetgenio::maxuvs ];
 				makepoint( &newpt, FREESEGVERTEX );
 				//setpointtype(newpt, FREESEGVERTEX);
 				getsteinerptonsegment( &sseg, refpt, newpt, uv );
 				if(b->psc)
 				{
 					// UV: TODO: getsteinerptonsegment doesn't fix seams!
-					for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+					for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 					{
 						setpointgeomuv( newpt, tt, uv[ tt ] );
 					}
@@ -16588,7 +16588,7 @@ bool tetgenmesh::fillcavity( arraypool* topshells, arraypool* botshells,
 {
 	arraypool *cavshells;
 	triface bdrytet, neightet, *parytet;
-	triface searchtet, spintet;
+	triface searchtet;
 	face *parysh;
 	face checkseg;
 	point pa, pb, pc;
@@ -18175,7 +18175,7 @@ void tetgenmesh::refineregion( face &splitsh, arraypool *cavpoints,
 	// UV interpolation
 	if(b->psc)
 	{
-		for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+		for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 		{
 			REAL auv, buv, newuv;
 			auv = pointgeomuv( pa, tt );
@@ -18220,7 +18220,7 @@ void tetgenmesh::refineregion( face &splitsh, arraypool *cavpoints,
 			// UV interpolation
 			if(b->psc)
 			{
-				for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+				for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 				{
 					REAL auv, buv, newuv;
 					auv = pointgeomuv( pa, tt );
@@ -18294,13 +18294,13 @@ void tetgenmesh::refineregion( face &splitsh, arraypool *cavpoints,
 			if(( dir == ACROSSFACE ) || ( dir == ACROSSEDGE ))
 			{
 				// Split the segment.
-				REAL uv[ tetgenio::pointparam::maxuvs ];
+				REAL uv[ tetgenio::maxuvs ];
 				makepoint( &steinpt, FREESEGVERTEX );
 				getsteinerptonsegment( &splitseg, refpt, steinpt, uv );
 				if(b->psc)
 				{
 					// UV
-					for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+					for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 					{
 						setpointgeomuv( steinpt, tt, uv[ tt ] );
 					}
@@ -19608,7 +19608,7 @@ int tetgenmesh::add_steinerpt_in_schoenhardtpoly( triface *abtets, int n,
 	REAL maxminvol = 0.0, minvol = 0.0, ori;
 	int success, maxidx = 0;
 	int it, i;
-	REAL vuv[ tetgenio::pointparam::maxuvs ], cuv[ tetgenio::pointparam::maxuvs ], duv[ tetgenio::pointparam::maxuvs ], samuv[ tetgenio::pointparam::maxuvs ], smtuv[ tetgenio::pointparam::maxuvs ];
+	REAL vuv[ tetgenio::maxuvs ], cuv[ tetgenio::maxuvs ], duv[ tetgenio::maxuvs ], samuv[ tetgenio::maxuvs ], smtuv[ tetgenio::maxuvs ];
 
 	pc = apex( abtets[ 0 ] );   // pc = p0
 	pd = oppo( abtets[ n - 1 ] ); // pd = p_(n-1)
@@ -19635,7 +19635,7 @@ int tetgenmesh::add_steinerpt_in_schoenhardtpoly( triface *abtets, int n,
 	for(i = 0; i < 3; i++) vcd[ i ] = pd[ i ] - pc[ i ];
 
 	// UV
-	for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+	for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 	{
 		cuv[ tt ] = pointgeomuv( pc, tt );
 		duv[ tt ] = pointgeomuv( pd, tt );
@@ -19650,7 +19650,7 @@ int tetgenmesh::add_steinerpt_in_schoenhardtpoly( triface *abtets, int n,
 			sampt[ i ] = pc[ i ] + ( stepi * (double)it ) * vcd[ i ];
 		}
 		// UV
-		for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+		for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 		{
 			samuv[ tt ] = cuv[ tt ] + ( stepi * (double)it ) * vuv[ tt ];
 		}
@@ -19693,7 +19693,7 @@ int tetgenmesh::add_steinerpt_in_schoenhardtpoly( triface *abtets, int n,
 		smtpt[ i ] = pc[ i ] + ( stepi * (double)maxidx ) * vcd[ i ];
 	}
 	// UV
-	for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+	for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 	{
 		smtuv[ tt ] = cuv[ tt ] + ( stepi * (double)maxidx ) * vuv[ tt ];
 	}
@@ -19753,7 +19753,7 @@ int tetgenmesh::add_steinerpt_in_schoenhardtpoly( triface *abtets, int n,
 	if(b->psc)
 	{
 		// UV
-		for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+		for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 		{
 			setpointgeomuv( steinerpt, tt, smtuv[ tt ] );
 		}
@@ -19923,7 +19923,7 @@ int tetgenmesh::add_steinerpt_in_segment( face* misseg, int searchlevel )
 		// UV interpolation
 		if(b->psc)
 		{
-			for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+			for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 			{
 				REAL auv, buv, newuv;
 				auv = pointgeomuv( startpt, tt );
@@ -20195,7 +20195,7 @@ int tetgenmesh::addsteiner4recoversegment( face* misseg, int splitsegflag )
 		}
 		if(b->psc)
 		{
-			for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+			for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 			{
 				REAL startuv, enduv, newuv;
 				startuv = pointgeomuv( startpt, tt );
@@ -20739,7 +20739,7 @@ int tetgenmesh::recoversubfaces( arraypool *misshlist, int steinerflag )
 						if(b->psc)
 						{
 							// UV
-							for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+							for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 							{
 								REAL startuv, enduv, newuv;
 								startuv = pointgeomuv( startpt, tt );
@@ -20841,7 +20841,7 @@ int tetgenmesh::recoversubfaces( arraypool *misshlist, int steinerflag )
 					if(b->psc)
 					{
 						// UV
-						for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+						for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 						{
 							REAL startuv, enduv, apexuv, newuv;
 							startuv = pointgeomuv( startpt, tt );
@@ -26168,13 +26168,13 @@ int tetgenmesh::splitsegment( face *splitseg, point encpt, REAL rrp,
 	point newpt;
 	insertvertexflags ivf;
 
-	REAL uv[ tetgenio::pointparam::maxuvs ];
+	REAL uv[ tetgenio::maxuvs ];
 	makepoint( &newpt, FREESEGVERTEX );
 	getsteinerptonsegment( splitseg, encpt, newpt, uv );
 	if(b->psc)
 	{
 		// UV
-		for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+		for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 		{
 			setpointgeomuv( newpt, tt, uv[ tt ] );
 		}
@@ -26356,7 +26356,7 @@ int tetgenmesh::checkfac4encroach( point pa, point pb, point pc, point checkpt,
 	// UV: TODO
 	if(uv)
 	{
-		for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+		for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 		{
 			uv[ tt ] = 1999;
 		}
@@ -26454,7 +26454,7 @@ int tetgenmesh::checkfac4split( face *chkfac, point& encpt, int& qflag,
 	// UV: Solve identical to vertex coordinates
 	{
 		// Solve per pairs of 2 UVs (TODO: very naive!)
-		for(int tpairs = 0; tpairs < ( tetgenio::pointparam::maxuvs / 2 ); ++tpairs)
+		for(int tpairs = 0; tpairs < ( tetgenio::maxuvs / 2 ); ++tpairs)
 		{
 			REAL auv[ 2 ], buv[ 2 ], cuv[ 2 ];
 
@@ -26714,7 +26714,7 @@ int tetgenmesh::splitsubface( face *splitfac, point encpt, point encpt1,
 	// Split the subface at its circumcenter.
 	for(i = 0; i < 3; i++) newpt[ i ] = ccent[ i ];
 	// UV
-	for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+	for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 	{
 		setpointgeomuv( newpt, tt, uv[ tt ] );
 	}
@@ -26836,7 +26836,7 @@ void tetgenmesh::repairencfacs( int chkencflag )
 	face *bface;
 	point encpt = NULL;
 	int qflag = 0;
-	REAL ccent[ 3 ], uv[ tetgenio::pointparam::maxuvs ];
+	REAL ccent[ 3 ], uv[ tetgenio::maxuvs ];
 
 	// Loop until the pool 'badsubfacs' is empty. Note that steinerleft == -1
 	//   if an unlimited number of Steiner points is allowed.
@@ -27254,7 +27254,7 @@ int tetgenmesh::splittetrahedron( triface* splittet, int qflag, REAL *ccent,
 		{
 			// Found a subface/edge containing proj(c).
 			// Check if 'c' encoraches upon this subface.
-			REAL fcent[ 3 ], r = 0, uv[ tetgenio::pointparam::maxuvs ];
+			REAL fcent[ 3 ], r = 0, uv[ tetgenio::maxuvs ];
 			ppt = (point *)&( searchsh.sh[ 3 ] );
 			if(checkfac4encroach( ppt[ 0 ], ppt[ 1 ], ppt[ 2 ], ccent, fcent, &r, uv ))
 			{
@@ -27365,11 +27365,11 @@ int tetgenmesh::splittetrahedron( triface* splittet, int qflag, REAL *ccent,
 				{
 					bface = (badface *)fastlookup( encshlist, i );
 
-					REAL uv[ tetgenio::pointparam::maxuvs ];
+					REAL uv[ tetgenio::maxuvs ];
 					// UV: Use circumcenter UV coordinates
 					{
 						// Solve per pairs of 2 UVs (TODO: very naive!)
-						for(int tpairs = 0; tpairs < ( tetgenio::pointparam::maxuvs / 2 ); ++tpairs)
+						for(int tpairs = 0; tpairs < ( tetgenio::maxuvs / 2 ); ++tpairs)
 						{
 							REAL A[ 4 ][ 4 ], rhs[ 4 ], D;
 							int indx[ 4 ];
@@ -31651,7 +31651,7 @@ void tetgenmesh::outnodes( tetgenio* out )
 			}
 			if(b->psc)
 			{
-				for(int tt = 0; tt < tetgenio::pointparam::maxuvs; ++tt)
+				for(int tt = 0; tt < tetgenio::maxuvs; ++tt)
 				{
 					out->pointparamlist[ index ].uv[ tt ] = pointgeomuv( pointloop, tt );
 				}
@@ -32019,9 +32019,9 @@ void tetgenmesh::outelements( tetgenio* out )
 		{ // -m option
 			// Update the point-to-tet map, so that every point is pointing
 			//   to a real tet, not a fictious one. Used by .p2t file.
-			for(int i = 0; i < 4; i++)
+			for(int ii = 0; ii < 4; ii++)
 			{
-				setpoint2tet( (point)( tptr[ 4 + i ] ), (tetrahedron)tptr );
+				setpoint2tet( (point)( tptr[ 4 + ii ] ), (tetrahedron)tptr );
 			}
 		}
 		tptr = tetrahedrontraverse( );

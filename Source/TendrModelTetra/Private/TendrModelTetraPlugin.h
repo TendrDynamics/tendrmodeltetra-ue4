@@ -16,6 +16,9 @@
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifndef TENDRMODELTETRAPLUGIN_H
+#define TENDRMODELTETRAPLUGIN_H
+
 //
 // Global Tendr model generator version
 //
@@ -30,3 +33,5 @@ DECLARE_LOG_CATEGORY_EXTERN(TendrModelTetraLog, All, All);
 // Global logging macros
 //
 #define TENDR_ERROR(Message, ...) UE_LOG(TendrModelTetraLog, Error, TEXT("[%s] ") TEXT(Message), TEXT(__FUNCTION__), ##__VA_ARGS__)
+
+#endif // TENDRMODELTETRAPLUGIN_H

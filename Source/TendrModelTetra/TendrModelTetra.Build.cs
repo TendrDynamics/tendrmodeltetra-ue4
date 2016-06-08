@@ -29,8 +29,8 @@ namespace UnrealBuildTool.Rules
 
             // DirectX11/RHI dependencies
             {
-                PrivateIncludePaths.Add("../../../../Source/Runtime/Windows/D3D11RHI/Private");
-                PrivateIncludePaths.Add("../../../../Source/Runtime/Windows/D3D11RHI/Private/Windows");
+                //PrivateIncludePaths.Add("../../../../Source/Runtime/Windows/D3D11RHI/Private");
+                //PrivateIncludePaths.Add("../../../../Source/Runtime/Windows/D3D11RHI/Private/Windows");
             }
 
             PublicDependencyModuleNames.AddRange(

@@ -160,12 +160,13 @@ public:
 		int *elist;
 	} vorofacet;
 
+    static const int maxuvs = (8 + 6);
 
 	// Additional parameters associated with an input (or mesh) vertex.
-	//   These informations are provided by CAD libraries. 
+	//   These informations are provided by CAD libraries.
 	typedef struct
 	{
-		static const int maxuvs = (8 + 6);
+		//static const int maxuvs = (8 + 6);
 		REAL uv[ maxuvs ];
 		int tag;
 		int type; // 0, 1, or 2.
