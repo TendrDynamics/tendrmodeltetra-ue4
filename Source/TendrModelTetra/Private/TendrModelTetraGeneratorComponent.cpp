@@ -454,7 +454,8 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 								//
 								// Find any equivalent vertices (coarse) in the input data and determine which output vertices (coarse) are actually on the surface
 								//
-								OutputModelData.VerticesSurfaceIndicators.Add( (InputToOutputMap.Find( Vertex ) != NULL) ? true : false );
+								bool bInterior = ( InputToOutputMap.Find( Vertex ) != NULL ) ? false : true;
+								OutputModelData.VerticesSurfaceIndicators.Add( bInterior );
 
 								// Coarse to sparse mapping algorithm
 								{
