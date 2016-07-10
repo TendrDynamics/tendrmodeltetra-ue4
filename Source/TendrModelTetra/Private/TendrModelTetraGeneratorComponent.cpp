@@ -134,7 +134,7 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 		// Generate model
 		{
 			// Debug statistics
-			const uint32 NumSurfaceVerts = InputVertices.Num();
+			uint32 NumSurfaceVerts = 0;
 
 			// 1. Tetrahedralization
 			bool ValidModel = false;
@@ -145,7 +145,7 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 					tetgenio in;	// deinitialize (deallocator) is automatically called when these go out of scope
 
 					in.firstnumber = 0;
-					in.numberofpoints = NumSurfaceVerts;
+					in.numberofpoints = InputVertices.Num();
 
 					in.pointlist = new REAL[ in.numberofpoints * 3 ];
 					in.pointparamlist = new tetgenio::pointparam[ in.numberofpoints ];
@@ -455,6 +455,10 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 								// Find any equivalent vertices (coarse) in the input data and determine which output vertices (coarse) are actually on the surface
 								//
 								bool bInterior = ( InputToOutputMap.Find( Vertex ) != NULL ) ? false : true;
+								if( !bInterior )
+								{
+									++NumSurfaceVerts;
+								}
 								OutputModelData.VerticesSurfaceIndicators.Add( bInterior );
 
 								// Coarse to sparse mapping algorithm
@@ -507,7 +511,7 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 							}
 
 							// Output some statistics
-							UE_LOG( TendrModelTetraLog, Log, TEXT( "Input  = Indices [%u], Vertices [%u]" ), InputIndices.Num(), NumSurfaceVerts );
+							UE_LOG( TendrModelTetraLog, Log, TEXT( "Input  = Indices [%u], Vertices [%u]" ), InputIndices.Num(), InputVertices.Num() );
 							UE_LOG( TendrModelTetraLog, Log, TEXT( "Output = Indices [%u], Triangles [%u], Tetrahedra [%u], Vertices [%u surface, %u internal, %u physics]" ),
 									OutputModelData.Indices.Num(),
 									OutputModelData.Indices.Num() / 3,
