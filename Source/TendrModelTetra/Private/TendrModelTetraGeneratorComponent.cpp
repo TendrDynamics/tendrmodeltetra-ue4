@@ -392,40 +392,134 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 							//
 							// In the end, our original surface face indices are restored within tetgen's output, and our UV vertex data will still be useable.
 							//
-							for(int i = 0; i < Indices.Num() / 3; ++i)
+							// While a naive algorithm would simply iterate over all face indices to find any input face indices that match
+							// (thus iterating over all input indices), we use a much faster spatial hashing algorithm instead:
+							//
+							// 1. The min/max bounds of the output (and thus input) indices are calculated.
+							// 2. For each face, each of the 3 vertices is normalized into the min/max bounds, quantized using a fixed HashSize and converted into a 1D hash coordinate.
+							// 3. The 1D hash coordinates for all 3 vertices are then summed to create a single 64-bit "face hash".
+							// 4. Information about the face is stored using the 64-bit face hash in a FUniqueTriangle structure.
+							// 5. A new iteration over all output face indices is done, a 64-bit face hash is calculated, and any duplicate faces (with any vertex permutationS) are found.
+							//
+							UE_LOG( TendrModelTetraLog, Log, TEXT( "Starting duplicate face pass" ) );
 							{
-								int A = Indices[ i * 3 + 0 ];
-								int B = Indices[ i * 3 + 1 ];
-								int C = Indices[ i * 3 + 2 ];
+								struct FUniqueTriangle
+								{
+									FUniqueTriangle( const FVector _VA, const FVector _VB, const FVector _VC )
+										: VA(_VA)
+										, VB(_VB)
+										, VC(_VC)
+										, A(-1)
+										, B(-1)
+										, C(-1)
+									{}
 
-								FVector VA = FVector( out.pointlist[ A * 3 + 0 ], out.pointlist[ A * 3 + 1 ], out.pointlist[ A * 3 + 2 ] );
-								FVector VB = FVector( out.pointlist[ B * 3 + 0 ], out.pointlist[ B * 3 + 1 ], out.pointlist[ B * 3 + 2 ] );
-								FVector VC = FVector( out.pointlist[ C * 3 + 0 ], out.pointlist[ C * 3 + 1 ], out.pointlist[ C * 3 + 2 ] );
+									FUniqueTriangle( const FVector _VA, const FVector _VB, const FVector _VC, const int _A, const int _B, const int _C )
+									: VA(_VA)
+									, VB(_VB)
+									, VC(_VC)
+									, A(_A)
+									, B(_B)
+									, C(_C)
+									{}
 
-								// Look for matching face (TODO: very naive method)
+									FVector VA, VB, VC;
+									int A, B, C;
+								};
+
+								TMultiMap<uint64, FUniqueTriangle> UniqueNormMap;
+
+								const int HashSize = 1 << 16;
+
+								FVector Min(1E6,1E6,1E6), Max(-1E6,-1E6,-1E6);
+
+								// Iterate over output indices
+								for(int i = 0; i < Indices.Num() / 3; ++i)
+								{
+									int A = Indices[ i * 3 + 0 ];
+									int B = Indices[ i * 3 + 1 ];
+									int C = Indices[ i * 3 + 2 ];
+
+									FVector VA = FVector( out.pointlist[ A * 3 + 0 ], out.pointlist[ A * 3 + 1 ], out.pointlist[ A * 3 + 2 ] );
+									FVector VB = FVector( out.pointlist[ B * 3 + 0 ], out.pointlist[ B * 3 + 1 ], out.pointlist[ B * 3 + 2 ] );
+									FVector VC = FVector( out.pointlist[ C * 3 + 0 ], out.pointlist[ C * 3 + 1 ], out.pointlist[ C * 3 + 2 ] );
+
+									Min.X = VA.X < Min.X ? VA.X : Min.X;
+									Min.Y = VA.Y < Min.Y ? VA.Y : Min.Y;
+									Min.Z = VA.Z < Min.Z ? VA.Z : Min.Z;
+
+									Max.X = VA.X > Max.X ? VA.X : Max.X;
+									Max.Y = VA.Y > Max.Y ? VA.Y : Max.Y;
+									Max.Z = VA.Z > Max.Z ? VA.Z : Max.Z;
+								}
+
+								// Calculate spatial hash multiplier vector
+								FVector MinMaxMultiplier = Max - Min;
+								MinMaxMultiplier.X = 1.0 / MinMaxMultiplier.X * HashSize;
+								MinMaxMultiplier.Y = 1.0 / MinMaxMultiplier.Y * HashSize;
+								MinMaxMultiplier.Z = 1.0 / MinMaxMultiplier.Z * HashSize;
+
+								// Inline function to calculate spatial hash
+								auto FnFaceHash = [ &out, &Min, &MinMaxMultiplier, &HashSize ]( const FVector &VA, const FVector &VB, const FVector &VC )
+								{
+									FVector GA = (VA - Min) * MinMaxMultiplier;
+									FVector GB = (VB - Min) * MinMaxMultiplier;
+									FVector GC = (VC - Min) * MinMaxMultiplier;
+
+									uint64 HA = (GA.Z * HashSize * HashSize) + (GA.Y * HashSize) + GA.X;
+									uint64 HB = (GB.Z * HashSize * HashSize) + (GB.Y * HashSize) + GB.X;
+									uint64 HC = (GC.Z * HashSize * HashSize) + (GC.Y * HashSize) + GC.X;
+
+									return (uint64)( HA + HB + HC );
+								};
+								
+								// Iterate over input indices
 								for(int i = 0; i < InputIndices.Num() / 3; ++i)
 								{
-									int IA = InputIndices[ i * 3 + 0 ];
-									int IB = InputIndices[ i * 3 + 1 ];
-									int IC = InputIndices[ i * 3 + 2 ];
+									int A = InputIndices[ i * 3 + 0 ];
+									int B = InputIndices[ i * 3 + 1 ];
+									int C = InputIndices[ i * 3 + 2 ];
 
-									FVector IVA = FVector( out.pointlist[ IA * 3 + 0 ], out.pointlist[ IA * 3 + 1 ], out.pointlist[ IA * 3 + 2 ] );
-									FVector IVB = FVector( out.pointlist[ IB * 3 + 0 ], out.pointlist[ IB * 3 + 1 ], out.pointlist[ IB * 3 + 2 ] );
-									FVector IVC = FVector( out.pointlist[ IC * 3 + 0 ], out.pointlist[ IC * 3 + 1 ], out.pointlist[ IC * 3 + 2 ] );
+									FVector VA = FVector( out.pointlist[ A * 3 + 0 ], out.pointlist[ A * 3 + 1 ], out.pointlist[ A * 3 + 2 ] );
+									FVector VB = FVector( out.pointlist[ B * 3 + 0 ], out.pointlist[ B * 3 + 1 ], out.pointlist[ B * 3 + 2 ] );
+									FVector VC = FVector( out.pointlist[ C * 3 + 0 ], out.pointlist[ C * 3 + 1 ], out.pointlist[ C * 3 + 2 ] );
 
-									if(( VA == IVA || VA == IVB || VA == IVC ) && ( VB == IVA || VB == IVB || VB == IVC ) && ( VC == IVA || VC == IVB || VC == IVC ) )
-									{
-										// Found equivalent surface face, so replace this face with the proper input face
-										A = IA;
-										B = IB;
-										C = IC;
-										break;
-									}
+									UniqueNormMap.Add( FnFaceHash( VA, VB, VC ), FUniqueTriangle( VA, VB, VC, A, B, C ) );
 								}
-								OutputModelData.Indices.Add( A );
-								OutputModelData.Indices.Add( B );
-								OutputModelData.Indices.Add( C );
+
+								// Iterate over output indices
+								for(int i = 0; i < Indices.Num() / 3; ++i)
+								{
+									int A = Indices[ i * 3 + 0 ];
+									int B = Indices[ i * 3 + 1 ];
+									int C = Indices[ i * 3 + 2 ];
+
+									FVector VA = FVector( out.pointlist[ A * 3 + 0 ], out.pointlist[ A * 3 + 1 ], out.pointlist[ A * 3 + 2 ] );
+									FVector VB = FVector( out.pointlist[ B * 3 + 0 ], out.pointlist[ B * 3 + 1 ], out.pointlist[ B * 3 + 2 ] );
+									FVector VC = FVector( out.pointlist[ C * 3 + 0 ], out.pointlist[ C * 3 + 1 ], out.pointlist[ C * 3 + 2 ] );
+
+									// Look for a matching face (with any vertex permutation) in UniqueNormMap
+									TArray<FUniqueTriangle> Array;
+									UniqueNormMap.MultiFind( FnFaceHash( VA, VB, VC ), Array );
+									if( Array.Num() > 0 )
+									{
+										for(int i = 0; i < Array.Num(); ++i)
+										{
+											FUniqueTriangle UT = Array[i];
+											if( (( VA == UT.VA || VA == UT.VB || VA == UT.VC ) && ( VB == UT.VA || VB == UT.VB || VB == UT.VC ) && ( VC == UT.VA || VC == UT.VB || VC == UT.VC ) ) )
+											{
+												A = UT.A;
+												B = UT.B;
+												C = UT.C;
+											}
+										}
+									}
+									OutputModelData.Indices.Add( A );
+									OutputModelData.Indices.Add( B );
+									OutputModelData.Indices.Add( C );
+								}
 							}
+							UE_LOG( TendrModelTetraLog, Log, TEXT( "Finished duplicate face pass" ) );
 
 							//
 							// Coarse-to-sparse mapping
