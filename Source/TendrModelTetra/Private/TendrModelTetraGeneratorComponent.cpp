@@ -79,7 +79,9 @@ UTendrModelTetraGeneratorComponent::UTendrModelTetraGeneratorComponent( const FO
 : USceneComponent( ObjectInitializer )
 {
 	TendrModelGeneratorVersion = PluginModelGeneratorVersion;
-	MaximumTetraVolume = 7500;
+	MinimumDihedralAngle = 12;
+	MaximumSteinerPoints = 1000;
+	MaximumTetraVolume = 0;
 }
 
 void UTendrModelTetraGeneratorComponent::OnRegister()
@@ -221,13 +223,15 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 						b.refine = 0;
 						b.plc = 1;
 						b.quality = 1;
-						b.steinerleft = 4;
 
 						//b.weighted = 1;
 
 						//b.no_sort = 1;
-						b.optlevel = 9;
-						b.optscheme = 7;
+						//b.optlevel = 9;
+						//b.optscheme = 7;
+
+						// Constrain maximum number of added inner (Steiner) points
+						b.steinerleft = MaximumSteinerPoints;
 
 						// Disable removal of duplicate vertices and faces
 						b.nomergefacet = 1;
@@ -246,16 +250,21 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 						// UV support
 						b.psc = 1;
 
-						// Constrain maximum volume of tetras
-						//b.metric = 1;
-						b.minratio = 1.5;
-						b.mindihedral = 10.0;
+						// Constrain ratio (generally between sqrt(2)/sqrt(3) and infinity) and dihedral angle (generally between 0 and 180)
+						// Enable TETGEN_DEBUG for more information, e.g. model statistics on these numbers
+						b.minratio = 0;
+						b.mindihedral = MinimumDihedralAngle;
+
+						// Constrain volume
 						if(MaximumTetraVolume > 0)
 						{
-							//b.varvolume = 0;
 							b.fixedvolume = 1;
 							b.maxvolume = MaximumTetraVolume;
-							
+						}
+						else
+						{
+							// Must be explicitly set to 0
+							b.fixedvolume = 0;
 						}
 					}
 

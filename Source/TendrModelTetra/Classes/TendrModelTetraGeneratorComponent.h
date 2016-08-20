@@ -57,7 +57,15 @@ public:
 	UPROPERTY()
 	uint32 TendrModelGeneratorVersion;
 
-	// Maximum volume constraint for tetrahedra in the generated model
+	// Maximum number of steiner points (inner points added to the original model)
+	UPROPERTY( EditAnywhere, NoClear, BlueprintReadWrite, Category = "Tendr Model", meta = ( UIMin = 1, ClampMin = 0 ) )
+	int32 MaximumSteinerPoints;
+
+	// Maximum dihedral angle constraint (angle between faces in degrees) for tetrahedra in the generated model or 0 if disabled
+	UPROPERTY( EditAnywhere, NoClear, BlueprintReadWrite, Category = "Tendr Model", meta = ( UIMin = 0, ClampMin = 0, UIMax = 180, ClampMax = 180 ) )
+	float MinimumDihedralAngle;
+
+	// Maximum volume constraint for tetrahedra in the generated model or 0 if disabled
 	UPROPERTY( EditAnywhere, NoClear, BlueprintReadWrite, Category = "Tendr Model", meta = ( UIMin = 0, ClampMin = 0 ) )
 	float MaximumTetraVolume;
 
