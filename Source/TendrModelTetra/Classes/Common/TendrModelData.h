@@ -33,7 +33,7 @@ public:
 	static const uint32 InvalidIndex = ~0;
 
 	// Builds data for this model
-	virtual FTendrModelData Build( const FTendrVertexArray& InputVertices, const FTendrIndexArray& InputIndices, const FTendrTexCoordArray( &InputTexCoords )[ MAX_TEXCOORDS ], bool bSilent ) = 0;
+	virtual FTendrModelData Build( const FTendrVertexArray& InputVertices, const FTendrIndexArray& InputIndices, const FTendrTangentArray& InputTangents, const FTendrTexCoordArray( &InputTexCoords )[ MAX_TEXCOORDS ], bool bSilent ) = 0;
 
 	// Returns the last error that occurred during building
 	virtual FString GetLastError() = 0;

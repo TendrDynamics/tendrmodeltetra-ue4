@@ -120,7 +120,7 @@ FString UTendrModelTetraGeneratorComponent::GetDesc()
 		);
 }
 
-FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArray& InputVertices, const FTendrIndexArray& InputIndices, const FTendrTexCoordArray( &InputTexCoords )[ MAX_TEXCOORDS ], bool bSilent )
+FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArray& InputVertices, const FTendrIndexArray& InputIndices, const FTendrTangentArray& InputTangents, const FTendrTexCoordArray( &InputTexCoords )[ MAX_TEXCOORDS ], bool bSilent )
 {
 	FTendrModelData OutputModelData;
 
@@ -166,11 +166,11 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 							param.uv[ t * 2 + 1 ] = InputTexCoords[ t ][ i ].Y;
 						}
 
-						// ACHTUNG: TODO: Store tangents
+						// Store tangents (packed as double -- no interpolation possible!)
+						param.uv[ MAX_TEXCOORDS * 2 + 0 ] = *((double*)(&InputTangents[ i ].TangentX.Vector.Packed));
+						param.uv[ MAX_TEXCOORDS * 2 + 1 ] = *((double*)(&InputTangents[ i ].TangentZ.Vector.Packed));
 
-						// Store other per-vertex data (currently not used)
-						param.uv[ MAX_TEXCOORDS * 2 + 0 ] = 0;
-						param.uv[ MAX_TEXCOORDS * 2 + 1 ] = 0;
+						// Store other per-vertex data (unused)
 						param.uv[ MAX_TEXCOORDS * 2 + 2 ] = 0;
 						param.uv[ MAX_TEXCOORDS * 2 + 3 ] = 0;
 						param.uv[ MAX_TEXCOORDS * 2 + 4 ] = 0;
@@ -350,12 +350,6 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 								for(int i = 0; i < out.numberoftetrahedra; ++i)
 								{
 									// We assume first-order tetrahedra with 4 vertices
-
-									// Store tetrahedron vertices (coarse)
-									OutputModelData.TetrahedronVertexIndices.Add( out.tetrahedronlist[ i * 4 + 0 ] );
-									OutputModelData.TetrahedronVertexIndices.Add( out.tetrahedronlist[ i * 4 + 1 ] );
-									OutputModelData.TetrahedronVertexIndices.Add( out.tetrahedronlist[ i * 4 + 2 ] );
-									OutputModelData.TetrahedronVertexIndices.Add( out.tetrahedronlist[ i * 4 + 3 ] );
 
 									// For each face, ensure the uniqueness
 									int A = FnFaceMakeUnique( out.tet2facelist[ i * 4 + 0 ] );
@@ -543,6 +537,16 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 								for(uint32 t = 0; t < MAX_TEXCOORDS; ++t)
 								{
 									OutputModelData.TexCoords[ t ].Add( FVector2D( out.pointparamlist[ i ].uv[ t * 2 + 0 ], out.pointparamlist[ i ].uv[ t * 2 + 1 ] ) );
+								}
+
+								// Store tangents
+								{
+									FTendrTangent Tangent;
+
+									Tangent.TangentX = FPackedNormal( *((uint32*)(&out.pointparamlist[ i ].uv[ MAX_TEXCOORDS * 2 + 0 ])) );
+									Tangent.TangentZ = FPackedNormal( *((uint32*)(&out.pointparamlist[ i ].uv[ MAX_TEXCOORDS * 2 + 1 ])) );
+
+									OutputModelData.Tangents.Add( Tangent );
 								}
 
 								//
