@@ -268,7 +268,7 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 						}
 					}
 
-					try
+					//try
 					{
 						// Invoke tetgen
 						{
@@ -283,19 +283,23 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 
 							if( out.numberofpoints == 0 )
 							{
-								throw 6;
+								SetError( TEXT( "Model generator output did not output any points" ) );
+								goto end;
 							}
 							if( out.numberoftetrahedra == 0 )
 							{
-								throw 7;
+								SetError( TEXT( "Model generator output did not output any tetrahedra" ) );
+								goto end;
 							}
 							if(	out.numberoftrifaces == 0 )
 							{
-								throw 8;
+								SetError( TEXT( "Model generator output did not output any triangles" ) );
+								goto end;
 							}
 							if( out.numberofedges == 0 )
 							{
-								throw 9;
+								SetError( TEXT( "Model generator output did not output any edges" ) );
+								goto end;
 							}
 						}
 
@@ -658,7 +662,7 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 							OutputModelData.Valid = true;
 						}
 					}
-					catch(int error)
+					/*catch(int error)
 					{
 						switch(error)
 						{
@@ -691,11 +695,12 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 							SetError( FString::Printf( TEXT( "Input could not be processed (tetgen error %u)" ), error ) );
 							break;
 						}
-					}
+					}*/
 				}
 			}
 		}
 
+		end:
 		if(!bSilent)
 		{
 			GWarn->EndSlowTask();

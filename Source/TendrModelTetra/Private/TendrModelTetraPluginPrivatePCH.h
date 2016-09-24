@@ -18,7 +18,9 @@
 
 #include "CoreUObject.h"
 #include "Engine.h"
-#include "UnrealEd.h"
+#if WITH_EDITOR
+	#include "UnrealEd.h"
+#endif
 #include "ModuleManager.h"
 
 #include "StaticMeshResources.h"

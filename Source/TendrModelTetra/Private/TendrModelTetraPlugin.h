@@ -16,10 +16,11 @@
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
+#pragma once
 //
 // Global Tendr model generator version
 //
-const FTendrModelGeneratorVersion PluginModelGeneratorVersion = 0x00000003;
+const FTendrModelGeneratorVersion PluginModelGeneratorVersion = (uint32)0x00000003;
 
 //
 // Global logging declarations

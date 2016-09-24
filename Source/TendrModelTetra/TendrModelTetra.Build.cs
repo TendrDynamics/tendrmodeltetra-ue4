@@ -44,21 +44,24 @@ namespace UnrealBuildTool.Rules
 				}
                 );
 
-            // For editor-specific functionality (e.g. world settings)
-            PrivateDependencyModuleNames.AddRange(
-            new string[] {
-				"PropertyEditor",
-				"AssetTools",
-				"WorkspaceMenuStructure",
-				"EditorStyle",
-				"UnrealEd",
-                "LevelEditor",
-                "Slate",
+            if( UEBuildConfiguration.bBuildEditor )
+            {
+                // For editor-specific functionality (e.g. world settings)
+                PrivateDependencyModuleNames.AddRange(
+                    new string[] {
+				        "PropertyEditor",
+				        "AssetTools",
+				        "WorkspaceMenuStructure",
+				        "EditorStyle",
+				        "UnrealEd",
+                        "LevelEditor",
+                        "Slate",
 
-                // Slate and SlateCore are needed as of 4.2
-                "SlateCore"
-			}
-            );
+                        // Slate and SlateCore are needed as of 4.2
+                        "SlateCore"
+			        }
+                );
+            }
         }
 	}
 }
