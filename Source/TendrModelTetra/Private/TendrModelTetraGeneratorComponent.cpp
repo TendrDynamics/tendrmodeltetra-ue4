@@ -467,7 +467,7 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 								MinMaxMultiplier.Z = 1.0 / MinMaxMultiplier.Z * HashSize;
 
 								// Inline function to calculate spatial hash
-								auto FnFaceHash = [ &out, &Min, &MinMaxMultiplier, &HashSize ]( const FVector &VA, const FVector &VB, const FVector &VC )
+								auto FnFaceHash = [ &Min, &MinMaxMultiplier, &HashSize ]( const FVector &VA, const FVector &VB, const FVector &VC )
 								{
 									FVector GA = (VA - Min) * MinMaxMultiplier;
 									FVector GB = (VB - Min) * MinMaxMultiplier;
