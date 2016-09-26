@@ -268,7 +268,9 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 						}
 					}
 
-					//try
+#if UE_EDITOR
+					try
+#endif
 					{
 						// Invoke tetgen
 						{
@@ -662,7 +664,8 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 							OutputModelData.Valid = true;
 						}
 					}
-					/*catch(int error)
+#if UE_EDITOR
+					catch(int error)
 					{
 						switch(error)
 						{
@@ -695,7 +698,8 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 							SetError( FString::Printf( TEXT( "Input could not be processed (tetgen error %u)" ), error ) );
 							break;
 						}
-					}*/
+					}
+#endif
 				}
 			}
 		}
