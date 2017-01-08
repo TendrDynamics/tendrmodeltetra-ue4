@@ -42,6 +42,13 @@ struct FTendrTangent
 {
 	FPackedNormal TangentX;
 	FPackedNormal TangentZ;
+
+	friend FArchive& operator<<(FArchive& Ar, FTendrTangent& T)
+	{
+		Ar << T.TangentX;
+		Ar << T.TangentZ;
+		return Ar;
+	}
 };
 
 //
