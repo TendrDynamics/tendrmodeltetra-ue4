@@ -40,8 +40,8 @@ public:
 //
 struct FTendrTangent
 {
-	FPackedNormal TangentX;
-	FPackedNormal TangentZ;
+	FPackedRGB10A2N TangentX;
+	FPackedRGB10A2N TangentZ;
 
 	friend FArchive& operator<<(FArchive& Ar, FTendrTangent& T)
 	{

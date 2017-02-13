@@ -558,8 +558,8 @@ FTendrModelData UTendrModelTetraGeneratorComponent::Build( const FTendrVertexArr
 								{
 									FTendrTangent Tangent;
 
-									Tangent.TangentX = FPackedNormal( *((uint32*)(&out.pointparamlist[ i ].uv[ MAX_TEXCOORDS * 2 + 0 ])) );
-									Tangent.TangentZ = FPackedNormal( *((uint32*)(&out.pointparamlist[ i ].uv[ MAX_TEXCOORDS * 2 + 1 ])) );
+									Tangent.TangentX = FPackedRGB10A2N( *((uint32*)(&out.pointparamlist[ i ].uv[ MAX_TEXCOORDS * 2 + 0 ])) );
+									Tangent.TangentZ = FPackedRGB10A2N( *((uint32*)(&out.pointparamlist[ i ].uv[ MAX_TEXCOORDS * 2 + 1 ])) );
 
 									OutputModelData.Tangents.Add( Tangent );
 								}
