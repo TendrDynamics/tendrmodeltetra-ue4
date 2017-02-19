@@ -23,5 +23,5 @@ For further support, you can always contact us at [http://tendrdynamics.com](htt
 Additional links:
 
 * [http://tendrdynamics.com](http://tendrdynamics.com)
-* [https://twitter.com/TendrDynamics)(https://twitter.com/TendrDynamics)
+* [https://twitter.com/TendrDynamics](https://twitter.com/TendrDynamics)
 * [UE4 forum thread](https://forums.unrealengine.com/showthread.php?7034-Tendr-a-real-time-volumetric-soft-body-physics-plug-in-for-UE4)
